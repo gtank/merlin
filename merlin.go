@@ -36,8 +36,11 @@ func (t *Transcript) AppendMessage(label, message []byte) {
 
 	fmt.Printf("meta-AD : %x || LE32(%d)\t# b\"%s\"\n", label, len(message), label)
 
-	t.s.AD(true, label)
-	t.s.AD(true, sizeBuffer)
+	// The StrobeGo API does not support continuation operations,
+	// so we have to pass the label and length as a single buffer.
+	// Otherwise it will record two meta-AD operations instead of one.
+	labelSize := append(label, sizeBuffer...)
+	t.s.AD(true, labelSize)
 
 	fmt.Printf("AD : %x\t# b\"%s\"\n", message, message)
 	t.s.AD(false, message)
@@ -53,8 +56,11 @@ func (t *Transcript) ExtractBytes(label []byte, outLen int) []byte {
 
 	fmt.Printf("meta-AD : %x || LE32(%d)\t# b\"%s\"\n", label, outLen, label)
 
-	t.s.AD(true, label)
-	t.s.AD(true, sizeBuffer)
+	// The StrobeGo API does not support continuation operations,
+	// so we have to pass the label and length as a single buffer.
+	// Otherwise it will record two meta-AD operations instead of one.
+	labelSize := append(label, sizeBuffer...)
+	t.s.AD(true, labelSize)
 
 	// a PRF call directly to the output buffer would be better
 	return t.s.PRF(outLen)

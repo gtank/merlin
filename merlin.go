@@ -63,5 +63,7 @@ func (t *Transcript) ExtractBytes(label []byte, outLen int) []byte {
 	t.s.AD(true, labelSize)
 
 	// a PRF call directly to the output buffer would be better
-	return t.s.PRF(outLen)
+	outBytes := t.s.PRF(outLen)
+	fmt.Printf("PRF : %x\n", outBytes)
+	return outBytes
 }

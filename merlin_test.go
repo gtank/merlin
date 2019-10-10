@@ -26,3 +26,27 @@ func TestSimpleTranscript(t *testing.T) {
 		t.Errorf("\nGot : %s\nWant: %s", cHex, expectedHex)
 	}
 }
+
+func TestComplexTranscript(t *testing.T) {
+	tr := NewTranscript("test protocol")
+	tr.AppendMessage([]byte("step1"), []byte("some data"))
+
+	data := make([]byte, 1024)
+	for i := range data {
+		data[i] = 99
+	}
+
+	var chlBytes []byte
+	for i := 0; i < 32; i++ {
+		chlBytes = tr.ExtractBytes([]byte("challenge"), 32)
+		tr.AppendMessage([]byte("bigdata"), data)
+		tr.AppendMessage([]byte("challengedata"), chlBytes)
+	}
+
+	expectedChlHex := "a8c933f54fae76e3f9bea93648c1308e7dfa2152dd51674ff3ca438351cf003c"
+	chlHex := fmt.Sprintf("%x", chlBytes)
+
+	if chlHex != expectedChlHex {
+		t.Errorf("\nGot : %s\nWant: %s", chlHex, expectedChlHex)
+	}
+}

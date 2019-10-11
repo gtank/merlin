@@ -40,7 +40,7 @@ func (t *Transcript) AppendMessage(label, message []byte) {
 	t.s.AD(false, message)
 }
 
-// ExtractBytes fills the supplied buffer with the verifier's challenge bytes.
+// ExtractBytes returns a buffer filled with the verifier's challenge bytes.
 // The label parameter is metadata about the challenge, and is also appended to
 // the transcript. See the Transcript Protocols section of the Merlin website
 // for details on labels.
@@ -54,7 +54,9 @@ func (t *Transcript) ExtractBytes(label []byte, outLen int) []byte {
 	labelSize := append(label, sizeBuffer...)
 	t.s.AD(true, labelSize)
 
-	// a PRF call directly to the output buffer would be better
+	// A PRF call directly to the output buffer (in the style of an append API)
+	// would be better, but our underlying STROBE library forces an allocation
+	// here.
 	outBytes := t.s.PRF(outLen)
 	return outBytes
 }

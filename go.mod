@@ -1,4 +1,4 @@
-module merlin
+module github.com/gtank/merlin
 
 go 1.12
 

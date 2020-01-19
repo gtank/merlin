@@ -2,7 +2,10 @@ package merlin
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Initialize STROBE-128(4d65726c696e2076312e30)   # b"Merlin v1.0"
@@ -49,4 +52,56 @@ func TestComplexTranscript(t *testing.T) {
 	if chlHex != expectedChlHex {
 		t.Errorf("\nGot : %s\nWant: %s", chlHex, expectedChlHex)
 	}
+}
+
+func TestTranscriptRNG(t *testing.T) {
+	label := "test protocol"
+	t1 := NewTranscript(label)
+	t2 := NewTranscript(label)
+	t3 := NewTranscript(label)
+	t4 := NewTranscript(label)
+
+	comm1 := []byte("Commitment data 1")
+	comm2 := []byte("Commitment data 2")
+
+	witness1 := []byte("Witness data 1")
+	witness2 := []byte("Witness data 2")
+
+	// t1 will have commitment 1 and t2, t3, t4 will gave same commitment
+	t1.AppendMessage([]byte("com"), comm1)
+	t2.AppendMessage([]byte("com"), comm2)
+	t3.AppendMessage([]byte("com"), comm2)
+	t4.AppendMessage([]byte("com"), comm2)
+
+	// t1, t2 will have same witness data
+	// t3, t4 will have same witness data
+	r1, err := t1.BuildRNG().ReKeyWithWitnessBytes([]byte("witness"), witness1).Finalize(rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+
+	r2, err := t2.BuildRNG().ReKeyWithWitnessBytes([]byte("witness"), witness1).Finalize(rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+
+	r3, err := t3.BuildRNG().ReKeyWithWitnessBytes([]byte("witness"), witness2).Finalize(rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+
+	r4, err := t4.BuildRNG().ReKeyWithWitnessBytes([]byte("witness"), witness2).Finalize(rand.New(rand.NewSource(0)))
+	assert.NoError(t, err)
+
+	s1 := r1.RandomBytes(32)
+	s2 := r2.RandomBytes(32)
+	s3 := r3.RandomBytes(32)
+	s4 := r4.RandomBytes(32)
+
+	// s1 shouldn't match with any due to different commitment data
+	// s2 shouldn't match with any due to different witness data
+	// s3 and s4 match since they same same commitment and witness data, given a bad rng.
+	// this says that above no equalities are due to different commitments and witness but not because of RNG
+	assert.NotEqual(t, s1, s2)
+	assert.NotEqual(t, s1, s3)
+	assert.NotEqual(t, s1, s4)
+
+	assert.NotEqual(t, s2, s3)
+	assert.NotEqual(t, s2, s4)
+
+	assert.Equal(t, s3, s4)
 }

@@ -99,10 +99,12 @@ func (t *TranscriptRNG) Finalize(rng io.Reader) (*TranscriptRNG, error) {
 	return t, nil
 }
 
-// RandomBytes returns random n bytes from the transcript.
-func (t *TranscriptRNG) RandomBytes(outLen int) []byte {
+// Read reads random data and writes to buf
+func (t *TranscriptRNG) Read(buf []byte) (int, error) {
+	l := len(buf)
 	sizeBuffer := make([]byte, 4)
-	binary.LittleEndian.PutUint32(sizeBuffer[0:], uint32(outLen))
+	binary.LittleEndian.PutUint32(sizeBuffer[0:], uint32(l))
 	t.s.AD(true, sizeBuffer)
-	return t.s.PRF(outLen)
+	res := t.s.PRF(l)
+	return copy(buf, res), nil
 }

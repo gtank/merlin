@@ -86,11 +86,28 @@ func TestTranscriptRNG(t *testing.T) {
 
 	r4, err := t4.BuildRNG().ReKeyWithWitnessBytes([]byte("witness"), witness2).Finalize(rand.New(rand.NewSource(0)))
 	assert.NoError(t, err)
+	var (
+		s1 = make([]byte, 32)
+		s2 = make([]byte, 32)
+		s3 = make([]byte, 32)
+		s4 = make([]byte, 32)
+	)
 
-	s1 := r1.RandomBytes(32)
-	s2 := r2.RandomBytes(32)
-	s3 := r3.RandomBytes(32)
-	s4 := r4.RandomBytes(32)
+	n, err := r1.Read(s1)
+	assert.NoError(t, err)
+	assert.Equal(t, n, 32)
+
+	n, err = r2.Read(s2)
+	assert.NoError(t, err)
+	assert.Equal(t, n, 32)
+
+	n, err = r3.Read(s3)
+	assert.NoError(t, err)
+	assert.Equal(t, n, 32)
+
+	n, err = r4.Read(s4)
+	assert.NoError(t, err)
+	assert.Equal(t, n, 32)
 
 	// s1 shouldn't match with any due to different commitment data
 	// s2 shouldn't match with any due to different witness data
